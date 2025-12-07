@@ -1,0 +1,31 @@
+name: Build and Deploy to Harbor
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Login to Registry
+      run: |
+        echo "${{ secrets.DOCKER_PASSWORD }}" | docker login localhost:6081 -u admin --password-stdin --tls-verify=false
+
+    - name: Build Docker image
+      run: |
+        docker  build -t localhost:6081/myapp/demo:${{ github.sha }} .
+        docker tag localhost:6081/myapp/demo:${{ github.sha }} localhost:6081/myapp/demo:latest
+
+    - name: Push to Registry
+      run: |
+        docker push localhost:6081/myapp/demo:${{ github.sha }} --tls-verify=false
+        docker push localhost:6081/myapp/demo:latest --tls-verify=false
+
+    - name: Deploy
+      run: |
+        echo "Deploy your application here"
+
